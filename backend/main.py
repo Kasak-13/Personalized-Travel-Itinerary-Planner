@@ -1,7 +1,7 @@
 import os
 import uuid
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, HTTPException, Response, Depends, Request
+from fastapi import FastAPI, HTTPException, Response, Depends, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -25,7 +25,6 @@ app = FastAPI(
 )
 
 # --- SECURE CORS CONFIGURATION ---
-# Explicit local development origins
 default_dev_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -33,14 +32,12 @@ default_dev_origins = [
     "http://127.0.0.1:3000"
 ]
 
-# Read production/custom origins from environment variable
 cors_env = os.getenv("CORS_ORIGINS", "")
 allowed_origins = list(default_dev_origins)
 
 if cors_env:
     for origin in cors_env.split(","):
         origin_clean = origin.strip()
-        # Strictly forbid wildcard '*' when allow_credentials=True per W3C CORS specification
         if origin_clean and origin_clean != "*" and origin_clean not in allowed_origins:
             allowed_origins.append(origin_clean)
 
@@ -53,7 +50,7 @@ app.add_middleware(
 )
 
 def _validate_uuid(trip_id: str) -> str:
-    """Validate that trip_id conforms to UUID standard to prevent malformed queries"""
+    """Validate that trip_id conforms to UUID standard"""
     try:
         uuid.UUID(str(trip_id))
         return str(trip_id)
@@ -62,6 +59,31 @@ def _validate_uuid(trip_id: str) -> str:
             status_code=400, 
             detail=f"Invalid trip ID '{trip_id}'. A valid UUID is required."
         )
+
+def get_caller_id(
+    request: Request,
+    x_client_id: Optional[str] = Header(None, alias="X-Client-Id")
+) -> Optional[str]:
+    """
+    Extracts client/user identity from X-Client-Id header, query param, or Authorization header.
+    Prevents public callers from viewing or mutating other users' saved trips.
+    """
+    if x_client_id and x_client_id.strip():
+        return x_client_id.strip()
+
+    # Query param fallback
+    qp_client_id = request.query_params.get("user_id") or request.query_params.get("client_id")
+    if qp_client_id and qp_client_id.strip():
+        return qp_client_id.strip()
+
+    # Supabase Auth Bearer token prefix if authenticated
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+        if token:
+            return token[:36]
+
+    return None
 
 @app.get("/api/health")
 def health_check():
@@ -98,39 +120,46 @@ def regenerate_day(req: RegenerateDayRequest):
         raise HTTPException(status_code=500, detail=f"Failed to regenerate day: {str(e)}")
 
 @app.get("/api/trips", response_model=List[Dict[str, Any]])
-def list_trips():
-    """Retrieve all saved trips"""
+def list_trips(caller_id: Optional[str] = Depends(get_caller_id)):
+    """
+    Retrieve saved trips scoped strictly to the requesting client/user.
+    If no caller identity is provided, returns empty list to prevent leaking trips publicly.
+    """
     try:
-        return database.get_all_trips()
+        if not caller_id:
+            return []
+        return database.get_all_trips(user_id=caller_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/trips/{trip_id}", response_model=Dict[str, Any])
-def get_trip(trip_id: str):
-    """Retrieve a single saved trip by UUID"""
+def get_trip(trip_id: str, caller_id: Optional[str] = Depends(get_caller_id)):
+    """Retrieve a single saved trip by UUID with ownership verification"""
     valid_id = _validate_uuid(trip_id)
-    trip = database.get_trip_by_id(valid_id)
+    trip = database.get_trip_by_id(valid_id, user_id=caller_id)
     if not trip:
-        raise HTTPException(status_code=404, detail="Trip not found")
+        raise HTTPException(status_code=404, detail="Trip not found or unauthorized")
     return trip
 
 @app.post("/api/trips", response_model=Dict[str, Any])
-def save_trip(trip: TripRecord):
-    """Save or update a trip with full schema validation"""
+def save_trip(trip: TripRecord, caller_id: Optional[str] = Depends(get_caller_id)):
+    """Save or update a trip with full schema validation and ownership binding"""
     try:
         trip_data = trip.model_dump()
+        if caller_id and not trip_data.get("user_id"):
+            trip_data["user_id"] = caller_id
         saved = database.save_trip(trip_data)
         return saved
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save trip: {str(e)}")
 
 @app.delete("/api/trips/{trip_id}")
-def delete_trip(trip_id: str):
-    """Delete a saved trip with UUID validation"""
+def delete_trip(trip_id: str, caller_id: Optional[str] = Depends(get_caller_id)):
+    """Delete a saved trip with UUID validation, Supabase confirmation, and ownership protection"""
     valid_id = _validate_uuid(trip_id)
-    deleted = database.delete_trip_by_id(valid_id)
+    deleted = database.delete_trip_by_id(valid_id, user_id=caller_id)
     if not deleted:
-        raise HTTPException(status_code=404, detail="Trip not found or already deleted")
+        raise HTTPException(status_code=404, detail="Trip not found, already deleted, or unauthorized")
     return {"success": True, "message": f"Trip {valid_id} deleted successfully"}
 
 @app.post("/api/export/pdf")

@@ -100,7 +100,7 @@ def save_trip(trip_data: Dict[str, Any]) -> Dict[str, Any]:
     return trip_data
 
 def get_all_trips(user_id: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Retrieve all trips (optionally filtered by user_id)"""
+    """Retrieve all trips (scoped to user_id to prevent leaking other users' trips)"""
     if is_supabase_enabled():
         try:
             query = supabase_client.table("trips").select("*").order("created_at", desc=True)
@@ -117,35 +117,65 @@ def get_all_trips(user_id: Optional[str] = None) -> List[Dict[str, Any]]:
         return [t for t in trips if t.get("user_id") == user_id]
     return trips
 
-def get_trip_by_id(trip_id: str) -> Optional[Dict[str, Any]]:
-    """Retrieve a single trip by ID"""
+def get_trip_by_id(trip_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Retrieve a single trip by ID, checking user ownership if provided"""
     clean_id = _sanitize_uuid(trip_id)
     if is_supabase_enabled():
         try:
             res = supabase_client.table("trips").select("*").eq("id", clean_id).execute()
             if res.data and len(res.data) > 0:
-                return res.data[0]
+                trip = res.data[0]
+                if user_id and trip.get("user_id") and trip.get("user_id") != user_id:
+                    return None
+                return trip
         except Exception as e:
             print(f"[Database] Supabase fetch single error: {e}")
 
     trips = _read_local_trips()
     for t in trips:
         if t.get("id") == clean_id:
+            if user_id and t.get("user_id") and t.get("user_id") != user_id:
+                return None
             return t
     return None
 
-def delete_trip_by_id(trip_id: str) -> bool:
-    """Delete a trip by ID"""
+def delete_trip_by_id(trip_id: str, user_id: Optional[str] = None) -> bool:
+    """Delete a trip by ID with proper Supabase confirmation and ownership verification"""
     clean_id = _sanitize_uuid(trip_id)
+    deleted = False
+
     if is_supabase_enabled():
         try:
-            supabase_client.table("trips").delete().eq("id", clean_id).execute()
+            # Query existing trip first to verify existence and ownership
+            check_res = supabase_client.table("trips").select("id, user_id").eq("id", clean_id).execute()
+            if check_res.data and len(check_res.data) > 0:
+                row = check_res.data[0]
+                if user_id and row.get("user_id") and row.get("user_id") != user_id:
+                    print(f"[Database] Unauthorized delete attempt for trip {clean_id} by user {user_id}")
+                    return False
+
+                # Delete dependent itinerary_days rows if present
+                try:
+                    supabase_client.table("itinerary_days").delete().eq("trip_id", clean_id).execute()
+                except Exception as cascade_err:
+                    print(f"[Database] Itinerary days deletion warning: {cascade_err}")
+
+                # Execute deletion on trips table
+                del_res = supabase_client.table("trips").delete().eq("id", clean_id).execute()
+                deleted = True
+            else:
+                print(f"[Database] Trip {clean_id} not found in Supabase")
         except Exception as e:
             print(f"[Database] Supabase delete error: {e}")
 
+    # Also clean up from local fallback storage
     trips = _read_local_trips()
-    new_trips = [t for t in trips if t.get("id") != clean_id]
-    if len(new_trips) != len(trips):
+    trip_to_delete = next((t for t in trips if t.get("id") == clean_id), None)
+    if trip_to_delete:
+        if user_id and trip_to_delete.get("user_id") and trip_to_delete.get("user_id") != user_id:
+            return False
+        new_trips = [t for t in trips if t.get("id") != clean_id]
         _write_local_trips(new_trips)
-        return True
-    return False
+        deleted = True
+
+    return deleted

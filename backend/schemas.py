@@ -57,6 +57,7 @@ class ItineraryResponse(BaseModel):
 
 class TripRecord(BaseModel):
     id: Optional[str] = None
+    user_id: Optional[str] = None
     title: str
     destination: str
     start_date: str
