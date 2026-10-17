@@ -4,12 +4,18 @@ import re
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
+import httpx
 
 from schemas import TripPreferences, ItineraryResponse, ItineraryDay, ActivityItem, RegenerateDayRequest
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+# --- AI Provider Configuration ---
+# Groq is active as the primary AI engine using free-tier models (llama-3.3-70b-versatile / llama-3.1-8b-instant)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+
+# Gemini is commented out as requested
+# GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 
 def _calculate_days(start_date_str: str, end_date_str: str) -> int:
@@ -115,15 +121,53 @@ You MUST return ONLY a valid, parseable JSON object matching this exact schema:
 Return ONLY the raw JSON. No conversational preamble, no markdown comments outside the JSON.
 """
 
+def _call_groq_api(prompt: str) -> Optional[Dict[str, Any]]:
+    """Calls Groq API using free tier models: llama-3.3-70b-versatile, fallback to llama-3.1-8b-instant"""
+    if not GROQ_API_KEY:
+        return None
+
+    models_to_try = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    for model_name in models_to_try:
+        try:
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are a professional travel itinerary planner that responds ONLY in valid JSON matching the user schema."
+                    },
+                    {"role": "user", "content": prompt}
+                ],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.4
+            }
+            with httpx.Client(timeout=40.0) as client:
+                res = client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+                if res.status_code == 200:
+                    resp_json = res.json()
+                    content = resp_json["choices"][0]["message"]["content"]
+                    data = _extract_json(content)
+                    print(f"[AI Service] Successfully generated itinerary using Groq ({model_name}).")
+                    return data
+                else:
+                    print(f"[AI Service] Groq error ({model_name}): status {res.status_code} - {res.text}")
+        except Exception as e:
+            print(f"[AI Service] Groq request failed on {model_name}: {e}")
+
+    return None
+
 def _generate_fallback_itinerary(prefs: TripPreferences, total_days: int) -> ItineraryResponse:
     """Intelligent programmatic itinerary generator with destination-aware activities"""
     start_dt = datetime.strptime(prefs.start_date, "%Y-%m-%d")
     daily_budget = round(prefs.budget / max(1, total_days), 2)
     
-    # Themes and activity blueprints based on interests and vibe
     vibe = (prefs.vibe or "balanced").lower()
     pace = prefs.travel_pace.lower()
-    
     dest = prefs.destination.strip().title()
     
     themes = [
@@ -192,7 +236,7 @@ def _generate_fallback_itinerary(prefs: TripPreferences, total_days: int) -> Iti
             )
             acts.append(evening_act)
             
-        day_cost = sum(a.estimated_cost for a in acts) + round(daily_budget * 0.15, 1) # include transit & snacks
+        day_cost = sum(a.estimated_cost for a in acts) + round(daily_budget * 0.15, 1)
         total_estimated += day_cost
         
         days_list.append(ItineraryDay(
@@ -235,26 +279,33 @@ def generate_itinerary(prefs: TripPreferences) -> ItineraryResponse:
     total_days = _calculate_days(prefs.start_date, prefs.end_date)
     prompt = _build_prompt(prefs, total_days)
     
-    # 1. Try Google Gemini if configured
-    if GEMINI_API_KEY:
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=GEMINI_API_KEY)
-            # Use gemini-1.5-flash or gemini-2.0-flash
-            model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
-                generation_config={"response_mime_type": "application/json"}
-            )
-            response = model.generate_content(prompt)
-            data = _extract_json(response.text)
-            return ItineraryResponse(**data)
-        except Exception as e:
-            print(f"[AI Service] Gemini call failed or quota exceeded: {e}. Checking secondary options...")
+    # 1. Groq Integration (Llama-3.3-70b-versatile / Llama-3.1-8b-instant)
+    if GROQ_API_KEY:
+        groq_data = _call_groq_api(prompt)
+        if groq_data:
+            try:
+                return ItineraryResponse(**groq_data)
+            except Exception as e:
+                print(f"[AI Service] Groq response validation error: {e}")
 
-    # 2. Try OpenAI if configured
+    # --- GEMINI INTEGRATION (COMMENTED OUT AS REQUESTED) ---
+    # if GEMINI_API_KEY:
+    #     try:
+    #         import google.generativeai as genai
+    #         genai.configure(api_key=GEMINI_API_KEY)
+    #         model = genai.GenerativeModel(
+    #             model_name="gemini-1.5-flash",
+    #             generation_config={"response_mime_type": "application/json"}
+    #         )
+    #         response = model.generate_content(prompt)
+    #         data = _extract_json(response.text)
+    #         return ItineraryResponse(**data)
+    #     except Exception as e:
+    #         print(f"[AI Service] Gemini call failed: {e}")
+
+    # 2. OpenAI Alternative (if configured)
     if OPENAI_API_KEY:
         try:
-            import httpx
             headers = {
                 "Authorization": f"Bearer {OPENAI_API_KEY}",
                 "Content-Type": "application/json"
@@ -282,13 +333,8 @@ def generate_itinerary(prefs: TripPreferences) -> ItineraryResponse:
     return _generate_fallback_itinerary(prefs, total_days)
 
 def regenerate_single_day(req: RegenerateDayRequest) -> ItineraryDay:
-    """Regenerates activities specifically for a single day"""
-    # If Gemini is configured, ask it to regenerate just this day
-    if GEMINI_API_KEY:
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=GEMINI_API_KEY)
-            prompt = f"""Regenerate a fresh, exciting alternative schedule for Day {req.day_number} ({req.date}) in {req.destination}.
+    """Regenerates activities specifically for a single day using Groq or fallback"""
+    prompt = f"""Regenerate a fresh, exciting alternative schedule for Day {req.day_number} ({req.date}) in {req.destination}.
 Interests: {', '.join(req.travel_interests) if req.travel_interests else 'general sightseeing'}
 Pace: {req.travel_pace}
 Vibe: {req.vibe}
@@ -318,15 +364,30 @@ Return ONLY valid JSON matching this schema:
     }}
   ]
 }}"""
-            model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
-                generation_config={"response_mime_type": "application/json"}
-            )
-            response = model.generate_content(prompt)
-            data = _extract_json(response.text)
-            return ItineraryDay(**data)
-        except Exception as e:
-            print(f"[AI Service] Regenerate day error with Gemini: {e}")
+
+    # 1. Try Groq
+    if GROQ_API_KEY:
+        groq_data = _call_groq_api(prompt)
+        if groq_data:
+            try:
+                return ItineraryDay(**groq_data)
+            except Exception as e:
+                print(f"[AI Service] Groq regenerate day validation error: {e}")
+
+    # --- GEMINI INTEGRATION (COMMENTED OUT AS REQUESTED) ---
+    # if GEMINI_API_KEY:
+    #     try:
+    #         import google.generativeai as genai
+    #         genai.configure(api_key=GEMINI_API_KEY)
+    #         model = genai.GenerativeModel(
+    #             model_name="gemini-1.5-flash",
+    #             generation_config={"response_mime_type": "application/json"}
+    #         )
+    #         response = model.generate_content(prompt)
+    #         data = _extract_json(response.text)
+    #         return ItineraryDay(**data)
+    #     except Exception as e:
+    #         print(f"[AI Service] Regenerate day error with Gemini: {e}")
 
     # Fallback single day regeneration
     dest = req.destination.strip().title()

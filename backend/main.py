@@ -11,7 +11,7 @@ from schemas import (
     TripRecord,
     RegenerateDayRequest
 )
-from services.ai_service import generate_itinerary, regenerate_single_day, GEMINI_API_KEY, OPENAI_API_KEY
+from services.ai_service import generate_itinerary, regenerate_single_day, GROQ_API_KEY, OPENAI_API_KEY
 from services.pdf_service import generate_itinerary_pdf
 import database
 
@@ -41,7 +41,7 @@ app.add_middleware(
 @app.get("/api/health")
 def health_check():
     """Health check endpoint displaying system and service connectivity"""
-    ai_status = "Gemini configured" if GEMINI_API_KEY else ("OpenAI configured" if OPENAI_API_KEY else "Programmatic generator active")
+    ai_status = "Groq (llama-3.3-70b-versatile) Active" if GROQ_API_KEY else "Programmatic generator active (add GROQ_API_KEY in .env)"
     db_status = "Supabase PostgreSQL connected" if database.is_supabase_enabled() else "Resilient local storage active"
     return {
         "status": "healthy",

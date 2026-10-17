@@ -30,7 +30,7 @@ export default function Navbar({ onOpenSavedTrips, onNewTrip, savedCount, health
           {/* Status pill */}
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-xs text-slate-600 border border-slate-200">
             <span className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-            <span>{isHealthy ? 'API Connected' : 'Connecting...'}</span>
+            <span>{isHealthy ? (healthStatus?.ai_engine?.includes('Groq') ? 'Groq Active' : 'API Connected') : 'Connecting...'}</span>
             {healthStatus?.database && (
               <span className="text-slate-400 border-l border-slate-300 pl-2 flex items-center gap-1">
                 <Database className="w-3 h-3 text-slate-500" />
