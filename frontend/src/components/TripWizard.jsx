@@ -55,6 +55,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
     travel_interests: initialDestination?.suggestedInterests || ['culture', 'food', 'nature'],
     travel_pace: initialDestination?.suggestedPace || 'balanced',
     vibe: initialDestination?.suggestedVibe || 'cultural',
+    vibes: [initialDestination?.suggestedVibe || 'cultural'],
     accommodation_preference: 'Mid-range Hotel',
     dietary_preferences: 'Vegetarian',
     additional_instructions: ''
@@ -67,12 +68,14 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
     if (initialDestination) {
       const name = typeof initialDestination === 'string' ? initialDestination : initialDestination.name;
       if (name) {
+        const destVibe = initialDestination.suggestedVibe || 'cultural';
         setFormData(prev => ({
           ...prev,
           destination: name,
           travel_interests: initialDestination.suggestedInterests || prev.travel_interests,
           travel_pace: initialDestination.suggestedPace || prev.travel_pace,
-          vibe: initialDestination.suggestedVibe || prev.vibe,
+          vibe: destVibe,
+          vibes: [destVibe],
         }));
       }
     }
@@ -134,8 +137,35 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateStep3()) {
-      onGenerate(formData);
+      const selectedVibes = formData.vibes && formData.vibes.length > 0
+        ? formData.vibes
+        : [formData.vibe || 'cultural'];
+      
+      const payload = {
+        ...formData,
+        vibe: selectedVibes.join(', ')
+      };
+      onGenerate(payload);
     }
+  };
+
+  const toggleVibe = (id) => {
+    setFormData(prev => {
+      const current = Array.isArray(prev.vibes) ? prev.vibes : (prev.vibe ? [prev.vibe] : ['cultural']);
+      const exists = current.includes(id);
+      let updated;
+      if (exists) {
+        // Keep at least 1 vibe selected
+        updated = current.length > 1 ? current.filter(x => x !== id) : current;
+      } else {
+        updated = [...current, id];
+      }
+      return {
+        ...prev,
+        vibes: updated,
+        vibe: updated.join(', ')
+      };
+    });
   };
 
   const toggleInterest = (id) => {
@@ -356,31 +386,43 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
               <p className="text-sm text-slate-500">Personalize your journey to match your style.</p>
             </div>
 
-            {/* Travel Style Grid */}
+            {/* Travel Style Grid (Multi-select) */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Travel Style / Vibe
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Travel Styles & Vibes <span className="text-purple-600 font-semibold normal-case">(Select 1 or more)</span>
+                </label>
+                <span className="text-[11px] font-bold text-purple-700 bg-purple-100/70 px-2 py-0.5 rounded-full">
+                  {(formData.vibes || [formData.vibe]).length} selected
+                </span>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {TRAVEL_STYLES.map(v => {
                   const Icon = v.icon;
-                  const isSelected = formData.vibe === v.id;
+                  const isSelected = (formData.vibes || [formData.vibe]).includes(v.id);
                   return (
                     <button
                       key={v.id}
                       type="button"
-                      onClick={() => setFormData({ ...formData, vibe: v.id })}
-                      className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      onClick={() => toggleVibe(v.id)}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative ${
                         isSelected 
-                          ? 'border-purple-500 bg-purple-50/80 ring-2 ring-purple-400/30 shadow-xs' 
+                          ? 'border-purple-500 bg-purple-50/90 ring-2 ring-purple-400/30 shadow-xs' 
                           : 'border-slate-200 bg-white hover:border-purple-200 hover:bg-purple-50/40'
                       }`}
                     >
-                      {Icon ? (
-                        <Icon className={`w-5 h-5 mb-1.5 ${isSelected ? 'text-purple-600' : 'text-slate-500'}`} />
-                      ) : (
-                        <Sparkles className={`w-5 h-5 mb-1.5 ${isSelected ? 'text-purple-600' : 'text-slate-500'}`} />
-                      )}
+                      <div className="flex items-center justify-between mb-1.5">
+                        {Icon ? (
+                          <Icon className={`w-5 h-5 ${isSelected ? 'text-purple-600' : 'text-slate-500'}`} />
+                        ) : (
+                          <Sparkles className={`w-5 h-5 ${isSelected ? 'text-purple-600' : 'text-slate-500'}`} />
+                        )}
+                        {isSelected && (
+                          <span className="w-4 h-4 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center text-[10px] font-bold">
+                            ✓
+                          </span>
+                        )}
+                      </div>
                       <div className="font-bold text-xs text-slate-900">{v.label}</div>
                       <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">{v.desc}</p>
                     </button>

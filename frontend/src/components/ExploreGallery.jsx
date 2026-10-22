@@ -68,7 +68,7 @@ export default function ExploreGallery({ onSelectDestination, onStartPlanning })
             className="group bg-white rounded-3xl border border-purple-100/90 shadow-2xs hover:shadow-xl hover:border-pink-200 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col justify-between"
           >
             {/* Top Visual Image with Overlays */}
-            <div className="relative aspect-16/10 overflow-hidden bg-stone-900">
+            <div className="relative h-56 sm:h-60 w-full overflow-hidden bg-stone-900 shrink-0">
               <img
                 src={dest.image}
                 alt={dest.name}
@@ -105,7 +105,7 @@ export default function ExploreGallery({ onSelectDestination, onStartPlanning })
             </div>
 
             {/* Card Content Body */}
-            <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
+            <div className="p-5 space-y-4 flex flex-col justify-between flex-1">
               
               <div className="space-y-3">
                 {/* Description */}

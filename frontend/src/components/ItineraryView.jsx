@@ -139,11 +139,19 @@ export default function ItineraryView({
               </div>
 
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">Style & Pace</span>
-                <p className="font-bold text-purple-700 capitalize flex items-center gap-1.5 mt-0.5">
-                  <Heart className="w-3.5 h-3.5 text-pink-500" />
-                  <span>{itinerary.vibe} Style • {currentPreferences?.travel_pace || 'Balanced'} Pace</span>
-                </p>
+                <span className="text-[10px] font-bold uppercase text-stone-400 tracking-wider block mb-1">
+                  Selected Styles & Pace
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                  {(itinerary.vibe || 'Cultural').split(',').map((v, i) => (
+                    <span key={i} className="px-2.5 py-0.5 rounded-lg bg-purple-50 text-purple-700 font-semibold text-xs border border-purple-100/80 capitalize">
+                      {v.trim()}
+                    </span>
+                  ))}
+                  <span className="px-2.5 py-0.5 rounded-lg bg-pink-50 text-pink-700 font-semibold text-xs border border-pink-100/80 capitalize">
+                    {currentPreferences?.travel_pace || 'Balanced'} Pace
+                  </span>
+                </div>
               </div>
 
               {/* Core Interests Tags */}
@@ -247,28 +255,32 @@ export default function ItineraryView({
                 className="bg-white rounded-3xl border border-purple-100/90 shadow-sm hover:shadow-md transition-shadow p-6 sm:p-8 space-y-6"
               >
                 
-                {/* Day Header Banner (matching Page 8 & 9) */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-purple-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white font-black text-lg flex items-center justify-center shadow-md shadow-purple-500/20">
+                {/* Day Header Banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-purple-100">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white font-serif font-black text-xl flex items-center justify-center shadow-md shadow-purple-500/20 shrink-0">
                       {String(day.day_number).padStart(2, '0')}
                     </div>
-                    <div>
-                      <span className="text-[11px] font-bold text-purple-600 uppercase tracking-wider">
-                        {day.date}
-                      </span>
-                      <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-                        Day {day.day_number} Overview • <span className="font-semibold text-slate-600 text-base">{day.theme || `Discover ${itinerary.destination}`}</span>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800">
+                          Day {day.day_number}
+                        </span>
+                        <span className="text-xs text-stone-400">•</span>
+                        <span className="text-xs font-semibold text-purple-700">{day.date}</span>
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight">
+                        {day.theme || `Discover ${itinerary.destination}`}
                       </h3>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 self-end sm:self-center">
                     <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                        Daily Cap
+                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">
+                        Daily Budget
                       </span>
-                      <span className="text-base font-black text-slate-900">
+                      <span className="text-lg sm:text-xl font-serif font-bold bg-gradient-to-r from-purple-800 to-pink-700 bg-clip-text text-transparent">
                         {currencySymbol} {day.estimated_daily_cost.toLocaleString()}
                       </span>
                     </div>
@@ -277,7 +289,7 @@ export default function ItineraryView({
                       type="button"
                       onClick={() => handleRegenDay(day)}
                       disabled={regeneratingDayNumber === day.day_number}
-                      className="p-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors border border-purple-200"
+                      className="p-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors border border-purple-200 cursor-pointer shadow-2xs"
                       title="Regenerate this specific day"
                     >
                       <RefreshCw className={`w-4 h-4 ${regeneratingDayNumber === day.day_number ? 'animate-spin' : ''}`} />
@@ -285,119 +297,166 @@ export default function ItineraryView({
                   </div>
                 </div>
 
-                {/* 4 Quadrants Grid: Morning, Afternoon, Evening, Dining (matching Pages 8 & 9) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 4 Spacious, Readable Quadrants */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   
                   {/* Quadrant 1: Morning Exploration */}
-                  <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100/80 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-extrabold uppercase tracking-wider text-amber-800 flex items-center gap-1.5 text-[11px]">
-                        <Sun className="w-3.5 h-3.5 text-amber-600" /> Morning Exploration
-                      </span>
-                      {morningAct && (
-                        <span className="font-bold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-md text-[11px]">
-                          {currencySymbol} {morningAct.estimated_cost}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-white border border-amber-200/90 shadow-2xs hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold uppercase tracking-wider text-amber-800 flex items-center gap-1.5 text-xs bg-amber-50 px-3 py-1 rounded-full border border-amber-200/60">
+                          <Sun className="w-3.5 h-3.5 text-amber-600" /> Morning Exploration
                         </span>
+                        {morningAct && (
+                          <span className="font-bold text-amber-900 bg-amber-100/80 px-2.5 py-0.5 rounded-full text-xs">
+                            {currencySymbol} {morningAct.estimated_cost}
+                          </span>
+                        )}
+                      </div>
+                      {morningAct ? (
+                        <>
+                          <h4 className="font-serif font-bold text-stone-900 text-base sm:text-lg leading-snug">
+                            {morningAct.title}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-normal">
+                            {morningAct.description}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-stone-500">Leisurely morning exploration & breakfast.</p>
                       )}
                     </div>
-                    {morningAct ? (
-                      <>
-                        <h4 className="font-bold text-slate-900 text-sm leading-snug">{morningAct.title}</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">{morningAct.description}</p>
-                        <p className="text-[11px] text-amber-800 font-semibold pt-1">
-                          ⏰ {morningAct.time} • Duration: {morningAct.estimated_duration}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-xs text-slate-500">Leisurely morning exploration & breakfast.</p>
+                    {morningAct && (
+                      <div className="pt-2 flex flex-wrap items-center gap-2 border-t border-amber-100/70 text-xs">
+                        <span className="font-semibold text-amber-900 bg-amber-50 px-2.5 py-1 rounded-lg">
+                          ⏰ {morningAct.time}
+                        </span>
+                        <span className="font-semibold text-stone-600 bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200/60">
+                          ⏱️ {morningAct.estimated_duration}
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {/* Quadrant 2: Afternoon Journey */}
-                  <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-100/80 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-extrabold uppercase tracking-wider text-purple-800 flex items-center gap-1.5 text-[11px]">
-                        <Compass className="w-3.5 h-3.5 text-purple-600" /> Afternoon Journey
-                      </span>
-                      {afternoonAct && (
-                        <span className="font-bold text-purple-900 bg-purple-100/70 px-2 py-0.5 rounded-md text-[11px]">
-                          {currencySymbol} {afternoonAct.estimated_cost}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-white border border-purple-200/90 shadow-2xs hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold uppercase tracking-wider text-purple-800 flex items-center gap-1.5 text-xs bg-purple-50 px-3 py-1 rounded-full border border-purple-200/60">
+                          <Compass className="w-3.5 h-3.5 text-purple-600" /> Afternoon Journey
                         </span>
+                        {afternoonAct && (
+                          <span className="font-bold text-purple-900 bg-purple-100/80 px-2.5 py-0.5 rounded-full text-xs">
+                            {currencySymbol} {afternoonAct.estimated_cost}
+                          </span>
+                        )}
+                      </div>
+                      {afternoonAct ? (
+                        <>
+                          <h4 className="font-serif font-bold text-stone-900 text-base sm:text-lg leading-snug">
+                            {afternoonAct.title}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-normal">
+                            {afternoonAct.description}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-stone-500">Afternoon cultural highlights & sightseeing.</p>
                       )}
                     </div>
-                    {afternoonAct ? (
-                      <>
-                        <h4 className="font-bold text-slate-900 text-sm leading-snug">{afternoonAct.title}</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">{afternoonAct.description}</p>
-                        <p className="text-[11px] text-purple-800 font-semibold pt-1">
-                          ⏰ {afternoonAct.time} • Duration: {afternoonAct.estimated_duration}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-xs text-slate-500">Afternoon cultural highlights & sightseeing.</p>
+                    {afternoonAct && (
+                      <div className="pt-2 flex flex-wrap items-center gap-2 border-t border-purple-100/70 text-xs">
+                        <span className="font-semibold text-purple-900 bg-purple-50 px-2.5 py-1 rounded-lg">
+                          ⏰ {afternoonAct.time}
+                        </span>
+                        <span className="font-semibold text-stone-600 bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200/60">
+                          ⏱️ {afternoonAct.estimated_duration}
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {/* Quadrant 3: Evening Charm */}
-                  <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/80 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-extrabold uppercase tracking-wider text-indigo-800 flex items-center gap-1.5 text-[11px]">
-                        <Moon className="w-3.5 h-3.5 text-indigo-600" /> Evening Charm
-                      </span>
-                      {eveningAct && (
-                        <span className="font-bold text-indigo-900 bg-indigo-100/70 px-2 py-0.5 rounded-md text-[11px]">
-                          {currencySymbol} {eveningAct.estimated_cost}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-white border border-indigo-200/90 shadow-2xs hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold uppercase tracking-wider text-indigo-800 flex items-center gap-1.5 text-xs bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200/60">
+                          <Moon className="w-3.5 h-3.5 text-indigo-600" /> Evening Charm
                         </span>
+                        {eveningAct && (
+                          <span className="font-bold text-indigo-900 bg-indigo-100/80 px-2.5 py-0.5 rounded-full text-xs">
+                            {currencySymbol} {eveningAct.estimated_cost}
+                          </span>
+                        )}
+                      </div>
+                      {eveningAct ? (
+                        <>
+                          <h4 className="font-serif font-bold text-stone-900 text-base sm:text-lg leading-snug">
+                            {eveningAct.title}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-normal">
+                            {eveningAct.description}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-stone-500">Sunset viewpoints and evening leisure.</p>
                       )}
                     </div>
-                    {eveningAct ? (
-                      <>
-                        <h4 className="font-bold text-slate-900 text-sm leading-snug">{eveningAct.title}</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">{eveningAct.description}</p>
-                        <p className="text-[11px] text-indigo-800 font-semibold pt-1">
-                          ⏰ {eveningAct.time} • Duration: {eveningAct.estimated_duration}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-xs text-slate-500">Sunset viewpoints and evening leisure.</p>
+                    {eveningAct && (
+                      <div className="pt-2 flex flex-wrap items-center gap-2 border-t border-indigo-100/70 text-xs">
+                        <span className="font-semibold text-indigo-900 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                          ⏰ {eveningAct.time}
+                        </span>
+                        <span className="font-semibold text-stone-600 bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200/60">
+                          ⏱️ {eveningAct.estimated_duration}
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {/* Quadrant 4: Cuisine & Dining */}
-                  <div className="p-4 rounded-2xl bg-pink-50/50 border border-pink-100/80 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-extrabold uppercase tracking-wider text-pink-800 flex items-center gap-1.5 text-[11px]">
-                        <Utensils className="w-3.5 h-3.5 text-pink-600" /> Cuisine & Dining
-                      </span>
-                      <span className="font-bold text-pink-900 bg-pink-100/70 px-2 py-0.5 rounded-md text-[11px]">
-                        Local Delights
-                      </span>
+                  <div className="p-5 sm:p-6 rounded-2xl bg-white border border-pink-200/90 shadow-2xs hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold uppercase tracking-wider text-pink-800 flex items-center gap-1.5 text-xs bg-pink-50 px-3 py-1 rounded-full border border-pink-200/60">
+                          <Utensils className="w-3.5 h-3.5 text-pink-600" /> Cuisine & Dining
+                        </span>
+                        <span className="font-bold text-pink-900 bg-pink-100/80 px-2.5 py-0.5 rounded-full text-xs">
+                          Local Flavors
+                        </span>
+                      </div>
+                      <h4 className="font-serif font-bold text-stone-900 text-base sm:text-lg leading-snug">
+                        Signature Culinary Experiences
+                      </h4>
+                      <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-normal">
+                        {diningInfo}
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-700 leading-relaxed">
-                      {diningInfo}
-                    </p>
-                    <p className="text-[11px] text-pink-800 font-semibold pt-1">
-                      🍴 Try authentic regional thalis, street chaats, or rooftop local cafes
-                    </p>
+                    <div className="pt-2 border-t border-pink-100/70 text-xs">
+                      <p className="text-pink-800 font-semibold flex items-center gap-1.5">
+                        <span>🍴</span>
+                        <span>Authentic thalis, iconic local snacks & cozy cafes</span>
+                      </p>
+                    </div>
                   </div>
 
                 </div>
 
-                {/* Bottom Bar: Stay & Transit Guidance (matching Pages 8 & 9) */}
+                {/* Bottom Bar: Stay & Transit Guidance */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
-                  <div className="p-3.5 rounded-2xl bg-purple-50/40 border border-purple-100 flex items-start gap-2.5 text-slate-700">
-                    <Hotel className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                  <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-100/80 flex items-start gap-3 text-stone-700">
+                    <Hotel className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold uppercase tracking-wider text-[10px] text-purple-700 block">Stay Recommendation</span>
-                      <span>{day.accommodation_suggestion || `Convenient heritage or central stay in ${itinerary.destination}`}</span>
+                      <span className="font-bold uppercase tracking-wider text-[10px] text-purple-700 block mb-0.5">Stay Recommendation</span>
+                      <span className="text-xs leading-relaxed">{day.accommodation_suggestion || `Convenient heritage or boutique stay in ${itinerary.destination}`}</span>
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-pink-50/40 border border-pink-100 flex items-start gap-2.5 text-slate-700">
-                    <Bus className="w-4 h-4 text-pink-600 shrink-0 mt-0.5" />
+                  <div className="p-4 rounded-2xl bg-pink-50/50 border border-pink-100/80 flex items-start gap-3 text-stone-700">
+                    <Bus className="w-5 h-5 text-pink-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold uppercase tracking-wider text-[10px] text-pink-700 block">Transit Guidance</span>
-                      <span>{transitInfo}</span>
+                      <span className="font-bold uppercase tracking-wider text-[10px] text-pink-700 block mb-0.5">Transit Guidance</span>
+                      <span className="text-xs leading-relaxed">{transitInfo}</span>
                     </div>
                   </div>
                 </div>
