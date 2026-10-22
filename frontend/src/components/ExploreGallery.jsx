@@ -1,124 +1,175 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, Palmtree, Mountain, Building2, Landmark, UtensilsCrossed, 
-  PartyPopper, Star, ArrowRight, Compass 
+  Sparkles, Star, MapPin, Clock, ArrowRight, Eye, IndianRupee 
 } from 'lucide-react';
 import { TRENDING_DESTINATIONS } from '../data/destinations';
 
-const VIBE_CATEGORIES = [
-  { id: 'All', label: 'All', icon: Sparkles },
-  { id: 'Beach', label: 'Beach', icon: Palmtree },
-  { id: 'Mountain', label: 'Mountain', icon: Mountain },
-  { id: 'City', label: 'City', icon: Building2 },
-  { id: 'Cultural', label: 'Cultural', icon: Landmark },
-  { id: 'Food', label: 'Food', icon: UtensilsCrossed },
-  { id: 'Nightlife', label: 'Nightlife', icon: PartyPopper },
+const VIBE_FILTERS = [
+  { id: 'All', label: 'All Destinations' },
+  { id: 'Heritage & Palaces', label: 'Heritage & Palaces' },
+  { id: 'Romantic Escapes', label: 'Romantic Escapes' },
+  { id: 'Mountain Adventure', label: 'Mountain Adventure' },
+  { id: 'Food & Culinary Trails', label: 'Food & Culinary Trails' },
+  { id: 'Coastal & Nature', label: 'Coastal & Nature' },
+  { id: 'Spiritual & Sacred', label: 'Spiritual & Sacred' },
 ];
 
-export default function ExploreGallery({ onSelectDestination }) {
-  const [selectedCategory, setSelectedCategory] = useState('All');
+export default function ExploreGallery({ onSelectDestination, onStartPlanning }) {
+  const [selectedFilter, setSelectedFilter] = useState('All');
 
-  const filtered = selectedCategory === 'All'
+  const filtered = selectedFilter === 'All'
     ? TRENDING_DESTINATIONS
-    : TRENDING_DESTINATIONS.filter(d => d.vibeCategory === selectedCategory);
+    : TRENDING_DESTINATIONS.filter(d => d.vibeCategory === selectedFilter);
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+    <section id="explore-gallery" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
-      {/* Popular Vibe Filter Pills */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-purple-700">
-          <Compass className="w-4 h-4 text-pink-500" />
-          <span>Popular Vibe</span>
+      {/* Section Header */}
+      <div className="text-center max-w-3xl mx-auto space-y-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold tracking-wider uppercase border border-emerald-200/60">
+          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Handcrafted India & Global Editions</span>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {VIBE_CATEGORIES.map(cat => {
-            const Icon = cat.icon;
-            const isSelected = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shadow-xs ${
-                  isSelected
-                    ? 'bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 text-white shadow-purple-500/25 scale-105'
-                    : 'bg-white hover:bg-purple-50 text-slate-700 border border-slate-200 hover:border-purple-200'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-pink-200' : 'text-purple-600'}`} />
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-stone-900 tracking-tight">
+          Explore Curated Itineraries by Vibe
+        </h2>
+
+        <p className="text-sm sm:text-base text-stone-600 font-normal leading-relaxed">
+          From the royal palaces of Rajasthan to misty Himalayan ridges and coastal backwaters. 
+          Pick a journey or preview its daily navigation plan.
+        </p>
       </div>
 
-      {/* Trending Now Header */}
-      <div className="flex items-center justify-between border-b border-purple-100 pb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-            Trending Now
-          </span>
-          {selectedCategory !== 'All' && (
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 uppercase tracking-wide">
-              in {selectedCategory}
-            </span>
-          )}
-        </div>
-        <span className="text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 cursor-pointer">
-          <span>Explore All India Destinations</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </span>
+      {/* Vibe Filter Pills Row (matching screenshot!) */}
+      <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-none">
+        {VIBE_FILTERS.map(filter => {
+          const isSelected = selectedFilter === filter.id;
+          return (
+            <button
+              key={filter.id}
+              onClick={() => setSelectedFilter(filter.id)}
+              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                isSelected
+                  ? 'bg-stone-900 text-white shadow-md'
+                  : 'bg-white hover:bg-stone-50 text-stone-700 border border-stone-200/80 shadow-xs'
+              }`}
+            >
+              {filter.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Destination Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Destination Grid (matching the 3-column editorial cards!) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filtered.map(dest => (
           <div
             key={dest.id}
-            onClick={() => onSelectDestination(dest)}
-            className="group bg-white rounded-3xl border border-slate-200/80 hover:border-purple-300 shadow-xs hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between"
+            className="group bg-white rounded-3xl border border-stone-200/90 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col justify-between"
           >
-            {/* Image Container */}
-            <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
+            {/* Top Visual Image with Overlays */}
+            <div className="relative aspect-16/10 overflow-hidden bg-stone-900">
               <img
                 src={dest.image}
                 alt={dest.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-stone-950/30 to-transparent" />
 
-              {/* Category pill */}
-              <span className="absolute top-3 left-3 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/90 text-purple-900 backdrop-blur-md shadow-xs">
-                {dest.vibeCategory}
-              </span>
+              {/* Vibe Pill Tag on Top-Left */}
+              <div className="absolute top-3.5 left-3.5">
+                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-stone-900/80 text-amber-100 backdrop-blur-md border border-white/10 shadow-sm">
+                  {dest.vibeTag || dest.vibeCategory}
+                </span>
+              </div>
 
-              {/* Price level */}
-              <span className="absolute bottom-3 right-3 text-xs font-bold text-white bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md">
-                {dest.priceLevel}
-              </span>
-            </div>
+              {/* Star Rating on Top-Right */}
+              <div className="absolute top-3.5 right-3.5">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-stone-900 shadow-sm">
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  <span>{dest.rating}</span>
+                  <span className="text-stone-400 font-normal">({dest.reviewCount || 1000})</span>
+                </span>
+              </div>
 
-            {/* Content Details */}
-            <div className="p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-base text-slate-900 group-hover:text-purple-600 transition-colors truncate">
+              {/* Title & Region Overlay on Bottom of Image */}
+              <div className="absolute bottom-3.5 left-4 right-4 text-white">
+                <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-sm">
                   {dest.name}
                 </h3>
+                <div className="flex items-center gap-1 text-xs text-stone-300 font-medium mt-0.5">
+                  <MapPin className="w-3 h-3 text-amber-300" />
+                  <span>{dest.locationRegion || 'India'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card Content Body */}
+            <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+              
+              <div className="space-y-3.5">
+                {/* Poetic Description */}
+                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed line-clamp-2">
+                  {dest.poeticDescription || dest.overview}
+                </p>
+
+                {/* Duration & Budget Badges */}
+                <div className="flex items-center justify-between text-xs py-1 border-y border-stone-100">
+                  <span className="flex items-center gap-1.5 font-semibold text-stone-700">
+                    <Clock className="w-3.5 h-3.5 text-stone-400" />
+                    <span>{dest.durationBadge || '4 Days / 3 Nights'}</span>
+                  </span>
+                  <span className="flex items-center gap-1 font-bold text-amber-800 bg-amber-50/80 px-2.5 py-0.5 rounded-full border border-amber-200/50">
+                    <span>{dest.totalBudgetRange || dest.avgBudget}</span>
+                  </span>
+                </div>
+
+                {/* Green Highlight Bullets (exact match to screenshot!) */}
+                {dest.featureBullets && (
+                  <div className="space-y-1.5 pt-1">
+                    {dest.featureBullets.map((bullet, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50/60 px-2.5 py-1 rounded-lg border border-emerald-100/60">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
+                        <span className="truncate font-medium">{bullet}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center gap-1 font-semibold text-slate-700">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  {dest.rating}
-                  <span className="text-slate-400 font-normal">({dest.reviews})</span>
-                </span>
-                <span className="font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
-                  {dest.avgBudget}
-                </span>
+              {/* Action Buttons: Quick View Plan + Plan This Trip */}
+              <div className="pt-3 grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectDestination(dest);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-stone-700 bg-white hover:bg-stone-50 border border-stone-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <Eye className="w-3.5 h-3.5 text-stone-500" />
+                  <span>Quick View Plan</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onStartPlanning) {
+                      onStartPlanning(dest);
+                    } else {
+                      onSelectDestination(dest);
+                    }
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-[#1C4E40] hover:bg-[#153D32] active:bg-[#0E2E25] transition-all flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer"
+                >
+                  <span>Plan This Trip</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
+
             </div>
           </div>
         ))}

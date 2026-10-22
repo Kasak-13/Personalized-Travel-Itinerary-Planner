@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import Navbar from './components/Navbar';
 import LandingHero from './components/LandingHero';
 import ExploreGallery from './components/ExploreGallery';
@@ -83,6 +84,35 @@ export default function App() {
       setItinerary(result);
       setCurrentView('itinerary');
       showToast(`Itinerary for ${preferences.destination} ready!`, 'success');
+      
+      // Fire celebratory firecrackers & confetti bursts!
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#C85A32', '#1C4E40', '#F59E0B', '#E11D48', '#10B981']
+        });
+        setTimeout(() => {
+          confetti({
+            particleCount: 60,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0 },
+            colors: ['#C85A32', '#F59E0B', '#FBBF24']
+          });
+          confetti({
+            particleCount: 60,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1 },
+            colors: ['#1C4E40', '#10B981', '#34D399']
+          });
+        }, 200);
+      } catch (confettiErr) {
+        console.warn('Confetti effect error:', confettiErr);
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       showToast(err.message || 'Failed to generate itinerary. Please try again.', 'error');
@@ -275,6 +305,7 @@ export default function App() {
             
             <ExploreGallery 
               onSelectDestination={(dest) => setSelectedDestinationForModal(dest)} 
+              onStartPlanning={(dest) => handleStartPlanning(dest)}
             />
           </div>
         )}
@@ -306,14 +337,16 @@ export default function App() {
         onClose={() => setToast({ message: '', type: 'info' })}
       />
 
-      {/* Footer */}
-      <footer className="border-t border-purple-100 bg-white py-8 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-semibold text-slate-700">
-            © 2026 TravelPlanner • India AI Travel Companion
-          </p>
-          <p className="text-purple-600 font-medium">
-            Powered by Groq AI (Llama 3.3) & Supabase PostgreSQL
+      {/* Editorial Luxury Footer */}
+      <footer className="border-t border-stone-200/80 bg-[#FAF7F2] py-10 text-center text-xs text-stone-500">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-serif font-bold text-sm text-stone-900 tracking-wider">WANDERPLAN</span>
+            <span className="text-stone-400">•</span>
+            <span className="text-stone-600 font-medium">Bespoke Editorial Travel Journal • AI Edition</span>
+          </div>
+          <p className="text-stone-500 font-medium">
+            Handcrafted for India & Global Havens • Powered by Groq AI & Supabase
           </p>
         </div>
       </footer>

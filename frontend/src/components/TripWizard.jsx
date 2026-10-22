@@ -158,9 +158,9 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
         <div className="flex items-center justify-between relative max-w-lg mx-auto">
           
           {/* Connecting line */}
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-purple-100 -translate-y-1/2 -z-0" />
+          <div className="absolute top-1/2 left-0 right-0 h-1 bg-stone-200 -translate-y-1/2 -z-0" />
           <div 
-            className="absolute top-1/2 left-0 h-1 bg-gradient-to-r from-purple-600 to-pink-500 -translate-y-1/2 -z-0 transition-all duration-300"
+            className="absolute top-1/2 left-0 h-1 bg-gradient-to-r from-amber-500 via-[#C85A32] to-rose-600 -translate-y-1/2 -z-0 transition-all duration-300"
             style={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
           />
 
@@ -172,12 +172,12 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
               step >= 1 
-                ? 'bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-md shadow-purple-500/30' 
-                : 'bg-white text-slate-400 border-2 border-purple-100'
+                ? 'bg-[#C85A32] text-white shadow-md shadow-[#C85A32]/30' 
+                : 'bg-white text-stone-400 border-2 border-stone-200'
             }`}>
               1
             </div>
-            <span className={`text-[11px] font-bold uppercase tracking-wider ${step >= 1 ? 'text-purple-700' : 'text-slate-400'}`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${step >= 1 ? 'text-[#C85A32]' : 'text-stone-400'}`}>
               Basics
             </span>
           </button>
@@ -190,12 +190,12 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
               step >= 2 
-                ? 'bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-md shadow-purple-500/30' 
-                : 'bg-white text-slate-400 border-2 border-purple-100'
+                ? 'bg-[#C85A32] text-white shadow-md shadow-[#C85A32]/30' 
+                : 'bg-white text-stone-400 border-2 border-stone-200'
             }`}>
               2
             </div>
-            <span className={`text-[11px] font-bold uppercase tracking-wider ${step >= 2 ? 'text-purple-700' : 'text-slate-400'}`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${step >= 2 ? 'text-[#C85A32]' : 'text-stone-400'}`}>
               Preferences
             </span>
           </button>
@@ -208,12 +208,12 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
               step === 3 
-                ? 'bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-md shadow-purple-500/30' 
-                : 'bg-white text-slate-400 border-2 border-purple-100'
+                ? 'bg-[#C85A32] text-white shadow-md shadow-[#C85A32]/30' 
+                : 'bg-white text-stone-400 border-2 border-stone-200'
             }`}>
               3
             </div>
-            <span className={`text-[11px] font-bold uppercase tracking-wider ${step === 3 ? 'text-purple-700' : 'text-slate-400'}`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${step === 3 ? 'text-[#C85A32]' : 'text-stone-400'}`}>
               Logistics
             </span>
           </button>
@@ -222,7 +222,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
       </div>
 
       {/* Main Wizard Form Card */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-purple-100 shadow-xl shadow-purple-500/5 p-6 sm:p-10 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-stone-200/90 shadow-xl shadow-stone-900/5 p-6 sm:p-10 space-y-6">
 
         {/* STEP 1: Essential Details (matching Page 11) */}
         {step === 1 && (
@@ -261,7 +261,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
 
               {/* Quick Picks Chips */}
               <div className="pt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                <span className="text-slate-400 font-medium mr-1">Popular in India:</span>
+                <span className="text-stone-500 font-medium mr-1">Popular in India:</span>
                 {INDIAN_QUICK_PICKS.map(city => (
                   <button
                     key={city}
@@ -270,7 +270,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
                       setFormData({ ...formData, destination: city });
                       setErrors({ ...errors, destination: null });
                     }}
-                    className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100/80 text-purple-800 rounded-full border border-purple-200 transition-colors text-xs font-semibold"
+                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100/90 text-amber-900 rounded-full border border-amber-200 transition-colors text-xs font-semibold cursor-pointer"
                   >
                     {city.split(',')[0]}
                   </button>
@@ -332,14 +332,14 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
               <button
                 type="button"
                 onClick={onCancel}
-                className="text-xs font-bold text-slate-500 hover:text-slate-800"
+                className="text-xs font-bold text-stone-500 hover:text-stone-800 cursor-pointer"
               >
                 Back to Explore
               </button>
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-6 py-3 rounded-2xl font-bold text-white bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 shadow-md shadow-purple-500/25 flex items-center gap-2 text-sm"
+                className="px-6 py-3 rounded-2xl font-bold text-white bg-[#C85A32] hover:bg-[#B54924] active:bg-[#963919] shadow-md shadow-[#C85A32]/25 flex items-center gap-2 text-sm cursor-pointer transition-all"
               >
                 <span>Next Step</span>
                 <ArrowRight className="w-4 h-4" />
@@ -444,7 +444,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
               <button
                 type="button"
                 onClick={handlePrev}
-                className="px-5 py-2.5 rounded-2xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 flex items-center gap-1.5 text-xs"
+                className="px-5 py-2.5 rounded-2xl font-bold text-stone-700 bg-stone-100 hover:bg-stone-200 flex items-center gap-1.5 text-xs cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Previous</span>
@@ -452,7 +452,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-6 py-3 rounded-2xl font-bold text-white bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 shadow-md shadow-purple-500/25 flex items-center gap-2 text-sm"
+                className="px-6 py-3 rounded-2xl font-bold text-white bg-[#C85A32] hover:bg-[#B54924] active:bg-[#963919] shadow-md shadow-[#C85A32]/25 flex items-center gap-2 text-sm cursor-pointer transition-all"
               >
                 <span>Next Step</span>
                 <ArrowRight className="w-4 h-4" />
@@ -592,7 +592,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-8 py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 active:from-purple-700 shadow-xl shadow-purple-500/25 flex items-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed group transition-all"
+                className="px-8 py-3.5 rounded-2xl font-bold text-white bg-[#C85A32] hover:bg-[#B54924] active:bg-[#963919] shadow-xl shadow-[#C85A32]/25 flex items-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed group transition-all cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -601,7 +601,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
                   </>
                 ) : (
                   <>
-                    <Wand2 className="w-4 h-4 group-hover:rotate-12 transition-transform text-pink-200" />
+                    <Wand2 className="w-4 h-4 group-hover:rotate-12 transition-transform text-amber-200" />
                     <span>Generate Itinerary</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </>
