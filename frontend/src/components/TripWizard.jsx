@@ -39,8 +39,12 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
 
   const [step, setStep] = useState(1);
 
+  const initialDestName = typeof initialDestination === 'string'
+    ? initialDestination
+    : (initialDestination?.name || 'Jaipur, Rajasthan');
+
   const [formData, setFormData] = useState({
-    destination: initialDestination?.name || '',
+    destination: initialDestName,
     starting_location: '',
     start_date: today,
     end_date: nextWeek,
@@ -58,9 +62,26 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
 
   const [errors, setErrors] = useState({});
 
+  // Sync if destination prop changes
+  React.useEffect(() => {
+    if (initialDestination) {
+      const name = typeof initialDestination === 'string' ? initialDestination : initialDestination.name;
+      if (name) {
+        setFormData(prev => ({
+          ...prev,
+          destination: name,
+          travel_interests: initialDestination.suggestedInterests || prev.travel_interests,
+          travel_pace: initialDestination.suggestedPace || prev.travel_pace,
+          vibe: initialDestination.suggestedVibe || prev.vibe,
+        }));
+      }
+    }
+  }, [initialDestination]);
+
   const validateStep1 = () => {
     const errs = {};
-    if (!formData.destination.trim()) {
+    const dest = (formData.destination || '').trim();
+    if (!dest) {
       errs.destination = 'Please enter or select a destination';
     }
     if (!formData.start_date) errs.start_date = 'Start date is required';
@@ -89,12 +110,25 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
   };
 
   const handleNext = () => {
-    if (step === 1 && validateStep1()) setStep(2);
-    else if (step === 2 && validateStep2()) setStep(3);
+    if (step === 1) {
+      if (validateStep1()) {
+        setErrors({});
+        setStep(2);
+        window.scrollTo({ top: 100, behavior: 'smooth' });
+      }
+    } else if (step === 2) {
+      if (validateStep2()) {
+        setErrors({});
+        setStep(3);
+        window.scrollTo({ top: 100, behavior: 'smooth' });
+      }
+    }
   };
 
   const handlePrev = () => {
+    setErrors({});
     setStep(prev => Math.max(1, prev - 1));
+    window.scrollTo({ top: 100, behavior: 'smooth' });
   };
 
   const handleSubmit = (e) => {
@@ -131,7 +165,11 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
           />
 
           {/* Step 1 Badge */}
-          <div className="flex flex-col items-center gap-1.5 relative z-10">
+          <button 
+            type="button"
+            onClick={() => setStep(1)}
+            className="flex flex-col items-center gap-1.5 relative z-10 group cursor-pointer focus:outline-none"
+          >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
               step >= 1 
                 ? 'bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-md shadow-purple-500/30' 
@@ -142,10 +180,14 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
             <span className={`text-[11px] font-bold uppercase tracking-wider ${step >= 1 ? 'text-purple-700' : 'text-slate-400'}`}>
               Basics
             </span>
-          </div>
+          </button>
 
           {/* Step 2 Badge */}
-          <div className="flex flex-col items-center gap-1.5 relative z-10">
+          <button 
+            type="button"
+            onClick={() => { if (validateStep1()) { setErrors({}); setStep(2); } }}
+            className="flex flex-col items-center gap-1.5 relative z-10 group cursor-pointer focus:outline-none"
+          >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
               step >= 2 
                 ? 'bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-md shadow-purple-500/30' 
@@ -156,10 +198,14 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
             <span className={`text-[11px] font-bold uppercase tracking-wider ${step >= 2 ? 'text-purple-700' : 'text-slate-400'}`}>
               Preferences
             </span>
-          </div>
+          </button>
 
           {/* Step 3 Badge */}
-          <div className="flex flex-col items-center gap-1.5 relative z-10">
+          <button 
+            type="button"
+            onClick={() => { if (validateStep1()) { setErrors({}); setStep(3); } }}
+            className="flex flex-col items-center gap-1.5 relative z-10 group cursor-pointer focus:outline-none"
+          >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
               step === 3 
                 ? 'bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-md shadow-purple-500/30' 
@@ -170,7 +216,7 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
             <span className={`text-[11px] font-bold uppercase tracking-wider ${step === 3 ? 'text-purple-700' : 'text-slate-400'}`}>
               Logistics
             </span>
-          </div>
+          </button>
 
         </div>
       </div>
@@ -197,13 +243,21 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
                   type="text"
                   placeholder="e.g. Jaipur, Manali, Goa, Varanasi..."
                   value={formData.destination}
-                  onChange={e => setFormData({ ...formData, destination: e.target.value })}
+                  onChange={e => {
+                    setFormData({ ...formData, destination: e.target.value });
+                    if (errors.destination) setErrors({ ...errors, destination: null });
+                  }}
                   className={`w-full pl-11 pr-4 py-3 rounded-2xl border ${
                     errors.destination ? 'border-pink-300 ring-2 ring-pink-100' : 'border-purple-100 focus:border-purple-500'
                   } focus:outline-none focus:ring-2 focus:ring-purple-100 text-sm font-medium`}
                 />
               </div>
-              {errors.destination && <p className="text-xs text-pink-500">{errors.destination}</p>}
+              {errors.destination && (
+                <div className="flex items-center gap-1.5 text-xs text-pink-600 font-semibold mt-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.destination}</span>
+                </div>
+              )}
 
               {/* Quick Picks Chips */}
               <div className="pt-2 flex flex-wrap items-center gap-1.5 text-xs">
@@ -212,7 +266,10 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
                   <button
                     key={city}
                     type="button"
-                    onClick={() => setFormData({ ...formData, destination: city })}
+                    onClick={() => {
+                      setFormData({ ...formData, destination: city });
+                      setErrors({ ...errors, destination: null });
+                    }}
                     className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100/80 text-purple-800 rounded-full border border-purple-200 transition-colors text-xs font-semibold"
                   >
                     {city.split(',')[0]}
