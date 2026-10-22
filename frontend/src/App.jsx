@@ -85,28 +85,28 @@ export default function App() {
       setCurrentView('itinerary');
       showToast(`Itinerary for ${preferences.destination} ready!`, 'success');
       
-      // Fire celebratory firecrackers & confetti bursts!
+      // Fire celebratory firecrackers & confetti bursts in pink & purple theme!
       try {
         confetti({
-          particleCount: 80,
-          spread: 70,
+          particleCount: 90,
+          spread: 80,
           origin: { y: 0.6 },
-          colors: ['#C85A32', '#1C4E40', '#F59E0B', '#E11D48', '#10B981']
+          colors: ['#EC4899', '#D946EF', '#A855F7', '#8B5CF6', '#F43F5E', '#FDE047']
         });
         setTimeout(() => {
           confetti({
-            particleCount: 60,
+            particleCount: 70,
             angle: 60,
             spread: 60,
             origin: { x: 0 },
-            colors: ['#C85A32', '#F59E0B', '#FBBF24']
+            colors: ['#EC4899', '#F472B6', '#D946EF', '#FDE047']
           });
           confetti({
-            particleCount: 60,
+            particleCount: 70,
             angle: 120,
             spread: 60,
             origin: { x: 1 },
-            colors: ['#1C4E40', '#10B981', '#34D399']
+            colors: ['#A855F7', '#8B5CF6', '#C084FC', '#FDE047']
           });
         }, 200);
       } catch (confettiErr) {
@@ -337,16 +337,18 @@ export default function App() {
         onClose={() => setToast({ message: '', type: 'info' })}
       />
 
-      {/* Editorial Luxury Footer */}
-      <footer className="border-t border-stone-200/80 bg-[#FAF7F2] py-10 text-center text-xs text-stone-500">
+      {/* Pink & Purple Luxury Footer */}
+      <footer className="border-t border-purple-100/80 bg-[#FDF8FD] py-10 text-center text-xs text-purple-900/60">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-serif font-bold text-sm text-stone-900 tracking-wider">WANDERPLAN</span>
-            <span className="text-stone-400">•</span>
-            <span className="text-stone-600 font-medium">Bespoke Editorial Travel Journal • AI Edition</span>
+            <span className="font-serif font-bold text-sm bg-gradient-to-r from-purple-900 to-pink-700 bg-clip-text text-transparent tracking-wider">
+              WANDERPLAN
+            </span>
+            <span className="text-purple-300">•</span>
+            <span className="text-purple-900/80 font-medium">Intelligent Travel Studio</span>
           </div>
-          <p className="text-stone-500 font-medium">
-            Handcrafted for India & Global Havens • Powered by Groq AI & Supabase
+          <p className="text-purple-900/60 font-medium">
+            Personalized Journeys Across India & Beyond • Powered by Groq AI
           </p>
         </div>
       </footer>
