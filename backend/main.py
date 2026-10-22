@@ -85,6 +85,26 @@ def get_caller_id(
 
     return None
 
+@app.get("/")
+def root():
+    """Root welcoming endpoint"""
+    return {
+        "status": "online",
+        "message": "Personalized Travel Itinerary Planner API is Live!",
+        "health_check": "/api/health",
+        "documentation": "/docs"
+    }
+
+@app.get("/")
+def root():
+    """Root welcoming endpoint"""
+    return {
+        "status": "online",
+        "message": "Personalized Travel Itinerary Planner API is Live!",
+        "health_check": "/api/health",
+        "documentation": "/docs"
+    }
+
 @app.get("/api/health")
 def health_check():
     """Health check endpoint displaying system and service connectivity"""
