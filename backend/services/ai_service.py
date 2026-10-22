@@ -126,7 +126,13 @@ def _call_groq_api(prompt: str) -> Optional[Dict[str, Any]]:
     if not GROQ_API_KEY:
         return None
 
-    models_to_try = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+    models_to_try = [
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b",
+        "qwen/qwen3.8-27b",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant"
+    ]
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
