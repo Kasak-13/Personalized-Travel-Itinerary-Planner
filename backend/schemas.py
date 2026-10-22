@@ -8,7 +8,7 @@ class TripPreferences(BaseModel):
     start_date: str = Field(..., description="Trip start date (YYYY-MM-DD)")
     end_date: str = Field(..., description="Trip end date (YYYY-MM-DD)")
     budget: float = Field(..., gt=0, description="Total budget amount")
-    currency: str = Field("USD", description="Currency symbol or 3-letter code")
+    currency: str = Field("INR", description="Currency symbol or 3-letter code (default INR)")
     travelers_count: int = Field(1, ge=1, description="Number of travelers")
     traveler_type: str = Field("solo", description="solo, couple, family, or group")
     travel_interests: List[str] = Field(default_factory=list, description="List of interests")

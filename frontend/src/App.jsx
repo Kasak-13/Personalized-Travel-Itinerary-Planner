@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
-import TripForm from './components/TripForm';
+import LandingHero from './components/LandingHero';
+import ExploreGallery from './components/ExploreGallery';
+import DestinationModal from './components/DestinationModal';
+import TripWizard from './components/TripWizard';
 import ItineraryView from './components/ItineraryView';
 import SavedTripsModal from './components/SavedTripsModal';
 import Toast from './components/Toast';
@@ -15,8 +18,12 @@ import {
 } from './services/api';
 
 export default function App() {
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'wizard' | 'itinerary'
   const [itinerary, setItinerary] = useState(null);
   const [currentPreferences, setCurrentPreferences] = useState(null);
+  const [selectedDestinationForModal, setSelectedDestinationForModal] = useState(null);
+  const [destinationForWizard, setDestinationForWizard] = useState(null);
+
   const [savedTrips, setSavedTrips] = useState([]);
   const [isSavedTripsModalOpen, setIsSavedTripsModalOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -58,7 +65,14 @@ export default function App() {
     }
   };
 
-  // Generate Itinerary
+  // Start planning from landing or modal
+  const handleStartPlanning = (prefillDest = null) => {
+    setDestinationForWizard(prefillDest);
+    setCurrentView('wizard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate Itinerary from Wizard
   const handleGenerate = async (preferences) => {
     setIsLoading(true);
     setCurrentPreferences(preferences);
@@ -67,6 +81,7 @@ export default function App() {
     try {
       const result = await generateItinerary(preferences);
       setItinerary(result);
+      setCurrentView('itinerary');
       showToast(`Itinerary for ${preferences.destination} ready!`, 'success');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -96,13 +111,12 @@ export default function App() {
         travel_pace: currentPreferences?.travel_pace || 'balanced',
         vibe: itinerary.vibe || 'balanced',
         budget_per_day: Math.round(dailyBudget),
-        currency: itinerary.currency || 'USD',
+        currency: itinerary.currency || 'INR',
         additional_instructions: currentPreferences?.additional_instructions
       };
 
       const newDay = await regenerateDay(req);
 
-      // Update days list
       setItinerary(prev => {
         if (!prev) return prev;
         const updatedDays = prev.days.map(d => d.day_number === day.day_number ? newDay : d);
@@ -143,7 +157,7 @@ export default function App() {
       const saved = await saveTrip(tripData);
       setSavedTripId(saved.id);
       setIsSaved(true);
-      showToast('Trip saved to database successfully!', 'success');
+      showToast('Trip saved to Supabase successfully!', 'success');
       loadSavedTrips();
     } catch (err) {
       showToast(err.message || 'Failed to save trip', 'error');
@@ -156,7 +170,7 @@ export default function App() {
   const handleDeleteTrip = async (id) => {
     try {
       await deleteTrip(id);
-      showToast('Trip deleted', 'info');
+      showToast('Trip deleted from database', 'info');
       if (savedTripId === id) {
         setIsSaved(false);
         setSavedTripId(null);
@@ -167,7 +181,7 @@ export default function App() {
     }
   };
 
-  // Select a Saved Trip to View
+  // Open a saved trip
   const handleSelectSavedTrip = (trip) => {
     if (trip.itinerary) {
       setItinerary(trip.itinerary);
@@ -183,6 +197,7 @@ export default function App() {
       });
       setSavedTripId(trip.id);
       setIsSaved(true);
+      setCurrentView('itinerary');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -202,29 +217,37 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
+    <div className="min-h-screen flex flex-col bg-slate-50/70 text-slate-900 font-sans selection:bg-purple-600 selection:text-white">
       
-      {/* Navigation */}
+      {/* Top Navbar matching TravelPlanner */}
       <Navbar 
+        activeTab={currentView}
+        onTabChange={(tab) => {
+          if (tab === 'home') {
+            setCurrentView('home');
+          } else if (tab === 'how-it-works' || tab === 'testimonials') {
+            setCurrentView('home');
+            window.scrollTo({ top: 600, behavior: 'smooth' });
+          }
+        }}
         onOpenSavedTrips={() => {
           loadSavedTrips();
           setIsSavedTripsModalOpen(true);
         }}
-        onNewTrip={() => {
-          setItinerary(null);
-          setIsSaved(false);
-          setSavedTripId(null);
-        }}
+        onNewTrip={() => handleStartPlanning(null)}
         savedCount={savedTrips.length}
         healthStatus={healthStatus}
       />
 
-      {/* Main Container */}
-      <main className="flex-1">
-        {itinerary ? (
+      {/* Main View Router */}
+      <main className="flex-1 pb-16">
+        
+        {/* VIEW 1: Interactive Itinerary Dashboard (matching Pages 8 & 9) */}
+        {currentView === 'itinerary' && itinerary && (
           <ItineraryView
             itinerary={itinerary}
-            onBack={() => setItinerary(null)}
+            currentPreferences={currentPreferences}
+            onBack={() => setCurrentView('wizard')}
             onSave={handleSaveTrip}
             onDownloadPdf={handleDownloadPdf}
             onRegenerateAll={handleRegenerateAll}
@@ -233,15 +256,40 @@ export default function App() {
             isDownloadingPdf={isDownloadingPdf}
             isSaved={isSaved}
           />
-        ) : (
-          <TripForm
+        )}
+
+        {/* VIEW 2: 3-Step Wizard Form (matching Pages 10 & 11) */}
+        {currentView === 'wizard' && (
+          <TripWizard
+            initialDestination={destinationForWizard}
             onGenerate={handleGenerate}
             isLoading={isLoading}
+            onCancel={() => setCurrentView('home')}
           />
         )}
+
+        {/* VIEW 3: Landing Page & Explore Gallery (matching Pages 5, 6, 7, 13, 14, 15) */}
+        {currentView === 'home' && (
+          <div className="space-y-12">
+            <LandingHero onStartPlanning={() => handleStartPlanning(null)} />
+            
+            <ExploreGallery 
+              onSelectDestination={(dest) => setSelectedDestinationForModal(dest)} 
+            />
+          </div>
+        )}
+
       </main>
 
-      {/* Saved Trips Modal */}
+      {/* Destination Preview Modal (matching Page 4) */}
+      <DestinationModal
+        destination={selectedDestinationForModal}
+        isOpen={Boolean(selectedDestinationForModal)}
+        onClose={() => setSelectedDestinationForModal(null)}
+        onStartPlanning={(dest) => handleStartPlanning(dest)}
+      />
+
+      {/* Saved Trips / Dashboard Modal (matching Pages 1 & 12) */}
       <SavedTripsModal
         isOpen={isSavedTripsModalOpen}
         onClose={() => setIsSavedTripsModalOpen(false)}
@@ -251,7 +299,7 @@ export default function App() {
         isLoading={isLoadingSavedTrips}
       />
 
-      {/* Toast Notification */}
+      {/* Toast Feedback Notification */}
       <Toast
         message={toast.message}
         type={toast.type}
@@ -259,8 +307,15 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
-        <p>© 2026 WanderPlan AI • Personalized Travel Itinerary Planner • Built with React, Tailwind CSS, FastAPI, and Supabase</p>
+      <footer className="border-t border-purple-100 bg-white py-8 text-center text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="font-semibold text-slate-700">
+            © 2026 TravelPlanner • India AI Travel Companion
+          </p>
+          <p className="text-purple-600 font-medium">
+            Powered by Groq AI (Llama 3.3) & Supabase PostgreSQL
+          </p>
+        </div>
       </footer>
 
     </div>
