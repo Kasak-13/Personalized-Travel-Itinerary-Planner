@@ -1,6 +1,6 @@
 import { generateDemoItinerary } from './demoFallback';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : '';
 
 // Persistent client/user identifier so each user only sees & manages their own trips
 export function getClientId() {
