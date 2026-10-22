@@ -29,7 +29,8 @@ default_dev_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "https://kasak-travel-planner.vercel.app"
 ]
 
 cors_env = os.getenv("CORS_ORIGINS", "")
@@ -38,12 +39,13 @@ allowed_origins = list(default_dev_origins)
 if cors_env:
     for origin in cors_env.split(","):
         origin_clean = origin.strip()
-        if origin_clean and origin_clean != "*" and origin_clean not in allowed_origins:
+        if origin_clean and origin_clean not in allowed_origins:
             allowed_origins.append(origin_clean)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
