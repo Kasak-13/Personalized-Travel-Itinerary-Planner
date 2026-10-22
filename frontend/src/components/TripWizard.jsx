@@ -15,10 +15,10 @@ const TRAVEL_STYLES = [
   { id: 'cultural', label: 'Cultural', icon: Landmark, desc: 'Heritage, temples & historic palaces' },
   { id: 'romantic', label: 'Romantic', icon: Heart, desc: 'Lakes, scenic sunsets & intimate cafes' },
   { id: 'adventurous', label: 'Adventure', icon: Mountain, desc: 'Himalayan treks, rafting & snow sports' },
-  { id: 'food-focused', label: 'Food-focused', desc: 'Street food, regional thalis & authentic dining' },
+  { id: 'food-focused', label: 'Food-focused', icon: Utensils, desc: 'Street food, regional thalis & authentic dining' },
   { id: 'relaxed', label: 'Relaxed', icon: Sun, desc: 'Peaceful stays, slow mornings & wellness' },
   { id: 'luxury', label: 'Luxury', icon: Gem, desc: 'Heritage havelis, 5-star comfort & private transit' },
-  { id: 'budget-friendly', label: 'Budget-friendly', desc: 'Smart spending, free attractions & local transit' },
+  { id: 'budget-friendly', label: 'Budget-friendly', icon: Wallet, desc: 'Smart spending, free attractions & local transit' },
   { id: 'sightseeing', label: 'Sightseeing', icon: Camera, desc: 'Iconic landmarks & scenic photography' },
 ];
 
@@ -376,7 +376,11 @@ export default function TripWizard({ initialDestination, onGenerate, isLoading, 
                           : 'border-slate-200 bg-white hover:border-purple-200 hover:bg-purple-50/40'
                       }`}
                     >
-                      <Icon className={`w-5 h-5 mb-1.5 ${isSelected ? 'text-purple-600' : 'text-slate-500'}`} />
+                      {Icon ? (
+                        <Icon className={`w-5 h-5 mb-1.5 ${isSelected ? 'text-purple-600' : 'text-slate-500'}`} />
+                      ) : (
+                        <Sparkles className={`w-5 h-5 mb-1.5 ${isSelected ? 'text-purple-600' : 'text-slate-500'}`} />
+                      )}
                       <div className="font-bold text-xs text-slate-900">{v.label}</div>
                       <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">{v.desc}</p>
                     </button>
