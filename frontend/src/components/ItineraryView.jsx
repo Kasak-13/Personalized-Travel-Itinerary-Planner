@@ -16,7 +16,8 @@ export default function ItineraryView({
   onRegenerateDay,
   isSaving,
   isDownloadingPdf,
-  isSaved
+  isSaved,
+  isRegeneratingAll
 }) {
   const [activeDayNumber, setActiveDayNumber] = useState(1);
   const [regeneratingDayNumber, setRegeneratingDayNumber] = useState(null);
@@ -52,14 +53,15 @@ export default function ItineraryView({
         </button>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Regenerate All */}
+          {/* Regenerate All Button */}
           <button
             onClick={onRegenerateAll}
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-700 bg-purple-50/60 hover:bg-purple-100/60 border border-purple-200 px-3.5 py-2 rounded-2xl transition-all"
+            disabled={isRegeneratingAll}
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-purple-900 bg-purple-50 hover:bg-purple-100 active:scale-98 border border-purple-200 px-4 py-2 rounded-2xl transition-all shadow-2xs disabled:opacity-60 cursor-pointer"
             title="Generate a completely new plan with the same parameters"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-purple-600" />
-            <span className="hidden sm:inline">Regenerate Trip</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-purple-600 ${isRegeneratingAll ? 'animate-spin' : ''}`} />
+            <span>{isRegeneratingAll ? 'Regenerating Trip...' : 'Regenerate Trip'}</span>
           </button>
 
           {/* Save Trip Button */}
@@ -105,6 +107,24 @@ export default function ItineraryView({
           </button>
         </div>
       </div>
+
+      {/* Global Trip Regeneration Indicator Banner */}
+      {isRegeneratingAll && (
+        <div className="bg-gradient-to-r from-purple-700 via-pink-600 to-purple-700 text-white py-3.5 px-6 rounded-2xl flex items-center justify-between shadow-lg shadow-purple-600/20 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+              <RefreshCw className="w-4 h-4 text-white animate-spin" />
+            </div>
+            <div>
+              <p className="font-bold text-sm">Groq AI is regenerating your entire itinerary...</p>
+              <p className="text-xs text-pink-100">Designing brand-new day themes, activities, and dining trails for {itinerary.destination}</p>
+            </div>
+          </div>
+          <span className="hidden sm:inline-block text-xs font-bold bg-white/20 px-3 py-1 rounded-full uppercase tracking-wider">
+            In Progress
+          </span>
+        </div>
+      )}
 
       {/* Main 2-Column Grid (matching Pages 8 & 9) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -252,8 +272,27 @@ export default function ItineraryView({
               <div 
                 key={day.day_number}
                 id={`day-card-${day.day_number}`}
-                className="bg-white rounded-3xl border border-purple-100/90 shadow-sm hover:shadow-md transition-shadow p-6 sm:p-8 space-y-6"
+                className="relative bg-white rounded-3xl border border-purple-100/90 shadow-sm hover:shadow-md transition-shadow p-6 sm:p-8 space-y-6 overflow-hidden"
               >
+                {/* Day Regeneration Overlay */}
+                {regeneratingDayNumber === day.day_number && (
+                  <div className="absolute inset-0 z-30 bg-white/90 backdrop-blur-xs flex flex-col items-center justify-center gap-3.5 p-6 animate-in fade-in duration-200">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-purple-500/30">
+                      <RefreshCw className="w-6 h-6 animate-spin text-pink-100" />
+                    </div>
+                    <div className="text-center space-y-1">
+                      <h4 className="font-serif font-bold text-stone-900 text-lg sm:text-xl tracking-tight">
+                        Regenerating Day {day.day_number}...
+                      </h4>
+                      <p className="text-xs sm:text-sm text-purple-800 font-medium max-w-sm">
+                        Groq AI is handcrafting fresh attractions, local food trails, and scenic routes for this day.
+                      </p>
+                    </div>
+                    <div className="w-48 h-1.5 bg-purple-100 rounded-full overflow-hidden mt-1">
+                      <div className="w-full h-full bg-gradient-to-r from-pink-500 to-purple-600 animate-pulse rounded-full" />
+                    </div>
+                  </div>
+                )}
                 
                 {/* Day Header Banner */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-purple-100">
@@ -288,11 +327,18 @@ export default function ItineraryView({
                     <button
                       type="button"
                       onClick={() => handleRegenDay(day)}
-                      disabled={regeneratingDayNumber === day.day_number}
-                      className="p-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors border border-purple-200 cursor-pointer shadow-2xs"
+                      disabled={regeneratingDayNumber === day.day_number || isRegeneratingAll}
+                      className={`p-2.5 sm:px-3 sm:py-2 rounded-2xl transition-all border cursor-pointer shadow-2xs flex items-center gap-1.5 ${
+                        regeneratingDayNumber === day.day_number 
+                          ? 'bg-purple-100 text-purple-900 border-purple-300' 
+                          : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
+                      }`}
                       title="Regenerate this specific day"
                     >
-                      <RefreshCw className={`w-4 h-4 ${regeneratingDayNumber === day.day_number ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`w-4 h-4 ${regeneratingDayNumber === day.day_number ? 'animate-spin text-purple-600' : ''}`} />
+                      <span className="text-xs font-bold hidden sm:inline">
+                        {regeneratingDayNumber === day.day_number ? 'Regenerating...' : 'Regen Day'}
+                      </span>
                     </button>
                   </div>
                 </div>

@@ -285,6 +285,7 @@ export default function App() {
             isSaving={isSaving}
             isDownloadingPdf={isDownloadingPdf}
             isSaved={isSaved}
+            isRegeneratingAll={isLoading}
           />
         )}
 
