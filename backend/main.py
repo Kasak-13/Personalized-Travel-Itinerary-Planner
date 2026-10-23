@@ -3,7 +3,12 @@ import uuid
 from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, Response, Depends, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
+load_dotenv()
 
 from schemas import (
     TripPreferences,
@@ -15,8 +20,6 @@ from schemas import (
 from services.ai_service import generate_itinerary, regenerate_single_day, GROQ_API_KEY, OPENAI_API_KEY
 from services.pdf_service import generate_itinerary_pdf
 import database
-
-load_dotenv()
 
 app = FastAPI(
     title="Personalized Travel Itinerary Planner API",

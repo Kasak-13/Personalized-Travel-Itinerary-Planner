@@ -3,11 +3,14 @@ import json
 import re
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
+from pathlib import Path
 from dotenv import load_dotenv
 import httpx
 
 from schemas import TripPreferences, ItineraryResponse, ItineraryDay, ActivityItem, RegenerateDayRequest
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 load_dotenv()
 
 # --- AI Provider Configuration ---
